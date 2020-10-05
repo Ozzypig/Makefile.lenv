@@ -1,0 +1,81 @@
+# Similar to Makefile.venv, but works for hererocks Lua environments (also requires Makefile.venv)
+#
+# This Makefile provides the following targets:
+#	lenv
+#		Use this as a dependency for any target that requires the Lua environment
+#		to be created and configured
+#	lua
+#		Launch interactive prompt for Lua environment
+#	lua-version
+#		Display the Lua environment version (eg lua --version)
+#	luarocks-version
+#		Display the LuaRocks version installed in the environment (eg luarocks --version)
+#
+# Configure using the following variables (= DEFAULT):
+#	LENV_DIR = ./.lua
+#		Directory to which Lua will be installed (passed to hererocks)
+#	LUA_VERSION = latest
+#		Version of Lua to install (pased to hererocks --lua)
+#	LUAROCKS_VERSION = latest
+#		Version of LuaRocks to install (passed to hererocks --luarocks)
+#	ROCKS_TO_INSTALL = 
+#		List of rocks to install (passed to luarocks install)
+
+# Variables to be configured
+LENV_DIR ?= ./.lua
+LUA_VERSION ?= latest
+LUAROCKS_VERSION ?= latest
+ROCKS_TO_INSTALL ?= 
+
+# Variables
+LUA = "$(LENV_DIR)/bin/lua"
+LUAROCKS = $(LENV_DIR)/bin/luarocks
+ifeq ($(OS),Windows_NT)
+	LUAROCKS := $(LUAROCKS).bat
+endif
+LUAROCKS := "$(LUAROCKS)"
+
+# Append this environment's libraries to LUA_PATH
+#LUA_PATH := $(LENV)/share/lua/;$(LUA_PATH)
+
+# Markers indicating certain things were installed
+LENV_LUA_INSTALLED = $(LENV_DIR)/lua-is-installed.txt
+LENV_LUAROCKS_INSTALLED = $(LENV_DIR)/luarocks-is-installed.txt
+LENV_DEPS_INSTALLED = $(LENV_DIR)/requirements-are-installed.txt
+
+.PHONY : lua
+lua : lenv
+	$(LUA) -i
+
+.PHONY : lua-version
+lua-version : $(LUA)
+	$(LUA) -v
+
+.PHONY : luarocks-version
+luarocks-version: $(LUAROCKS)
+	$(LUAROCKS) --version
+
+.PHONY : lenv
+lenv : | $(LUA) $(LUAROCKS) lenv-reqs
+
+$(LUA) : $(LENV_LUA_INSTALLED)
+
+$(LENV_LUA_INSTALLED) : 
+	$(VENV)/python -m hererocks $(LENV_DIR) --lua $(LUA_VERSION) --luarocks $(LUAROCKS_VERSION)
+	touch $(LENV_LUA_INSTALLED)
+
+$(LUAROCKS) : $(LENV_LUAROCKS_INSTALLED)
+
+$(LENV_LUAROCKS_INSTALLED) : $(LUA)
+	touch $(LENV_LUAROCKS_INSTALLED)
+
+.PHONY : lenv-reqs
+lenv-reqs : $(LENV_DEPS_INSTALLED)
+
+$(LENV_DEPS_INSTALLED) :
+	$(foreach rock,$(ROCKS_TO_INSTALL),$(LUAROCKS) install $(rock);)
+	touch $(LENV_DEPS_INSTALLED)
+
+.PHONY : clean-lenv
+clean-lenv :
+	$(RM) -r $(LENV_DIR)
