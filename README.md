@@ -26,7 +26,7 @@ You will also need to include [Makefile.venv](https://github.com/sio/Makefile.ve
 The following variables can be configured within your Makefile in order to control how Makefile.lenv manages your Lua environment:
 
   * `LENV_DIR`: The directory to which `hererocks` will install the Lua environment. Default: `./.lua`
-     * You should 
+     * You should not check this file into source control, as it will contain binaries built by hererocks as well as LuaRocks packages.
   * `LUA_VERSION`: Passed to `hererocks` to setup the Lua environment. Default: `latest`
   * `LUAROCKS_VERSION`: Passed to `hererocks` to setup the Lua environment. Default: `latest`
   * `ROCKS_TO_INSTALL`: List of [LuaRocks](https://luarocks.org/) rocks to install in the Lua environment.
@@ -40,7 +40,7 @@ You can read about all the targets in detail within [Makefile.lenv](Makefile.len
   * `lua-version`: Displays Lua version in use
   * `luarocks-version` Displays LuaRocks version in use
   * `lenv-reqs`: For targets that require the Lua environment rocks (`$(ROCKS_TO_INSTALL)`) to be installed
-  * `clean-lenv`: For targets that require a clean directory (removes `$(LENV_DIR)`)
+  * `clean-lenv`: For targets that require a clean Lua environment directory (removes `LENV_DIR`)
 
 ## Available Variables
 
